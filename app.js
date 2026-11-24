@@ -111,16 +111,16 @@ if($('#hp')&&H.banks){$('#hp-t').innerHTML='<option value="vault">Large bank vau
 // ---- challenge generator
 if($('#roll')&&H.challenge){const C=H.challenge,pick=a=>a[Math.floor(Math.random()*a.length)];let cur;
  const roll=()=>{cur={who:pick(C.who),rule:pick(C.rule),goal:pick(C.goal),twist:pick(C.twist)};$('#roll-card').innerHTML=`<p class="cat c-gold">What would Lucia do?</p><dl><div><dt>Who</dt><dd>${esc(cur.who)}</dd></div><div><dt>Rule</dt><dd>${esc(cur.rule)}</dd></div><div><dt>Goal</dt><dd>${esc(cur.goal)}</dd></div><div><dt>Twist</dt><dd>${esc(cur.twist)}</dd></div></dl>`};
- $('#roll').onclick=roll;$('#roll-copy').onclick=()=>copy(`GTA6 HQ challenge: ${cur.who}. ${cur.rule}. Goal: ${cur.goal}. Twist: ${cur.twist}.`);roll()}
+ $('#roll').onclick=roll;$('#roll-copy').onclick=()=>copy(`Gatorline challenge: ${cur.who}. ${cur.rule}. Goal: ${cur.goal}. Twist: ${cur.twist}.`);roll()}
 // ---- rank card (canvas)
 if($('#rk-canvas')){const cv=$('#rk-canvas'),x=cv.getContext('2d');const img=new Image();img.src='assets/hero-lucia-jason.jpg';
- const draw=()=>{const g=id=>$('#rk-'+id).value,F='"Barlow Condensed", "Arial Narrow", sans-serif';x.fillStyle='#160d20';x.fillRect(0,0,1200,630);
-  const pg=x.createLinearGradient(560,0,1200,630);pg.addColorStop(0,'#3a2347');pg.addColorStop(1,'#1d1229');x.fillStyle=pg;x.fillRect(560,0,640,630);
+ const draw=()=>{const g=id=>$('#rk-'+id).value,F='"Barlow Condensed", "Arial Narrow", sans-serif';x.fillStyle='#0f1713';x.fillRect(0,0,1200,630);
+  const pg=x.createLinearGradient(560,0,1200,630);pg.addColorStop(0,'#22302a');pg.addColorStop(1,'#1d1229');x.fillStyle=pg;x.fillRect(560,0,640,630);
   if(img.complete&&img.naturalWidth)x.drawImage(img,560,630-358,640,358);
-  x.fillStyle='#ffc5b8';x.font='700 30px '+F;x.fillText('GTA6 HQ · RANK CARD',64,90,470);
+  x.fillStyle='#ffc5b8';x.font='700 30px '+F;x.fillText('Gatorline · RANK CARD',64,90,470);
   x.fillStyle='#fff9cb';x.font='700 88px '+F;x.fillText(String(g('name')||'Player').toUpperCase().slice(0,20),64,186,470);
   [['CHAPTER',g('ch')],['COMPLETION',(+g('pct')||0)+'%'],['TROPHIES',(+g('tr')||0)+' / 55'],['HOURS',+g('h')||0]].forEach(([k,v],i)=>{const X=64+(i%2)*250,Y=280+Math.floor(i/2)*130;x.fillStyle='#ffdf9e';x.font='700 24px '+F;x.fillText(k,X,Y);x.fillStyle='#ffffff';x.font='700 60px '+F;x.fillText(String(v),X,Y+60,220)});
-  x.fillStyle='#e7d6ff';x.font='500 24px Jost, sans-serif';x.fillText('Favorite car: '+String(g('car')).slice(0,24),64,560,470);
+  x.fillStyle='#efe2c8';x.font='500 24px Jost, sans-serif';x.fillText('Favorite car: '+String(g('car')).slice(0,24),64,560,470);
   x.fillStyle='rgba(255,255,255,.6)';x.font='500 15px Jost, sans-serif';x.fillText('Unofficial fan site · not affiliated with Rockstar',64,600,470);x.fillText('Art: purewallfr (DeviantArt)',600,40,560)};
  img.onload=draw;(document.fonts?document.fonts.ready:Promise.resolve()).then(draw);$$('#rk input,#rk select').forEach(i=>i.addEventListener('input',draw));draw();
  $('#rk-dl').onclick=()=>{const a=document.createElement('a');a.download='gta6hq-rank-card.png';a.href=cv.toDataURL('image/png');a.click()}}
@@ -141,15 +141,15 @@ const bd=$('#cboard');if(bd){const links=JSON.parse(bd.dataset.links),svg=bd.que
 if($('#leomap')&&window.L&&H.pins){const W=800,Hh=1200,cx=c=>(c-.5)/8*W,cy=r=>(r-.5)/12*Hh;
  const map=L.map('leomap',{crs:L.CRS.Simple,minZoom:-1,maxZoom:2,zoomSnap:.25,attributionControl:true});map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
  const toLL=(x,y)=>L.latLng(Hh-y,x);const bounds=L.latLngBounds(toLL(0,Hh),toLL(W,0));
- const cols='12345678',rows='ABCDEFGHIJKL';let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${Hh}"><rect width="${W}" height="${Hh}" fill="#120e1b"/>`;
- for(let i=0;i<=8;i++)svg+=`<line x1="${i*100}" y1="0" x2="${i*100}" y2="${Hh}" stroke="#231c30" stroke-width="1"/>`;for(let j=0;j<=12;j++)svg+=`<line x1="0" y1="${j*100}" x2="${W}" y2="${j*100}" stroke="#231c30" stroke-width="1"/>`;
- for(let i=0;i<8;i++)svg+=`<text x="${i*100+50}" y="22" fill="#6e6385" font-size="16" text-anchor="middle" font-family="Arial">${cols[i]}</text>`;for(let j=0;j<12;j++)svg+=`<text x="14" y="${j*100+56}" fill="#6e6385" font-size="16" font-family="Arial">${rows[j]}</text>`;
- const RC={'Mount Kalaga':'#3f6b4f','Port Gellhorn':'#7a5a3a','Ambrosia':'#6b5a2f','Vice City':'#7b3b66','Grassrivers':'#2f6a5a','Leonida Keys':'#2f5f7a'};
- H.regions.forEach(([n,c,r,sq])=>{const rx=n==='Leonida Keys'?170:(n==='Port Gellhorn'||n==='Ambrosia'?95:120),ry=n==='Leonida Keys'?62:80;svg+=`<ellipse cx="${cx(c)}" cy="${cy(r)}" rx="${rx}" ry="${ry}" fill="${RC[n]}" fill-opacity=".55" stroke="#fff9cb" stroke-opacity=".35"/><text x="${cx(c)}" y="${cy(r)-ry-26}" fill="#fff9cb" font-size="24" font-weight="700" text-anchor="middle" font-family="Arial Narrow,Arial">${n.toUpperCase()}</text><text x="${cx(c)}" y="${cy(r)-ry-8}" fill="#e7d6ff" font-size="14" text-anchor="middle" font-family="Arial">Grid ${sq}</text>`});
+ const cols='12345678',rows='ABCDEFGHIJKL';let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${Hh}"><rect width="${W}" height="${Hh}" fill="#0c1411"/>`;
+ for(let i=0;i<=8;i++)svg+=`<line x1="${i*100}" y1="0" x2="${i*100}" y2="${Hh}" stroke="#1a2620" stroke-width="1"/>`;for(let j=0;j<=12;j++)svg+=`<line x1="0" y1="${j*100}" x2="${W}" y2="${j*100}" stroke="#1a2620" stroke-width="1"/>`;
+ for(let i=0;i<8;i++)svg+=`<text x="${i*100+50}" y="22" fill="#5f7363" font-size="16" text-anchor="middle" font-family="Arial">${cols[i]}</text>`;for(let j=0;j<12;j++)svg+=`<text x="14" y="${j*100+56}" fill="#5f7363" font-size="16" font-family="Arial">${rows[j]}</text>`;
+ const RC={'Mount Kalaga':'#3f6b4f','Port Gellhorn':'#7a5a3a','Ambrosia':'#6b5a2f','Vice City':'#6b4a2a','Grassrivers':'#2f6a5a','Leonida Keys':'#2f5f7a'};
+ H.regions.forEach(([n,c,r,sq])=>{const rx=n==='Leonida Keys'?170:(n==='Port Gellhorn'||n==='Ambrosia'?95:120),ry=n==='Leonida Keys'?62:80;svg+=`<ellipse cx="${cx(c)}" cy="${cy(r)}" rx="${rx}" ry="${ry}" fill="${RC[n]}" fill-opacity=".55" stroke="#fff9cb" stroke-opacity=".35"/><text x="${cx(c)}" y="${cy(r)-ry-26}" fill="#fff9cb" font-size="24" font-weight="700" text-anchor="middle" font-family="Arial Narrow,Arial">${n.toUpperCase()}</text><text x="${cx(c)}" y="${cy(r)-ry-8}" fill="#efe2c8" font-size="14" text-anchor="middle" font-family="Arial">Grid ${sq}</text>`});
  svg+='</svg>';L.imageOverlay('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg),bounds,{alt:'Schematic grid map of Leonida regions'}).addTo(map);map.fitBounds(bounds);map.setMaxBounds(bounds.pad(.2));
- const CAT={weapon:['#ffb2c6','Weapons'],car:['#ffdf9e','Cars'],secret:['#c9a7ff','Secrets'],store:['#9be3c3','Stores'],money:['#ffd4a8','Money'],wildlife:['#8fd3ff','Wildlife'],collectible:['#ffffff','Collectibles']};
+ const CAT={weapon:['#ffb2c6','Weapons'],car:['#ffdf9e','Cars'],secret:['#f0a24b','Secrets'],store:['#9be3c3','Stores'],money:['#ffd4a8','Money'],wildlife:['#8fd3ff','Wildlife'],collectible:['#ffffff','Collectibles']};
  const reg=Object.fromEntries(H.regions.map(r=>[r[0],r]));const per={};const on=Object.fromEntries(Object.keys(CAT).map(k=>[k,true]));
- const mk=H.pins.map((p,i)=>{const r=reg[p.r],n=per[p.r]=(per[p.r]||0)+1,ang=n*2.399,rad=Math.min(1,Math.sqrt(n)/3.4);const sx=r[0]==='Leonida Keys'?150:(r[0]==='Port Gellhorn'||r[0]==='Ambrosia'?78:100),sy=r[0]==='Leonida Keys'?48:64;const m=L.circleMarker(toLL(cx(r[1])+Math.cos(ang)*rad*sx,cy(r[2])+Math.sin(ang)*rad*sy),{radius:7,color:'#160d20',weight:2,fillColor:CAT[p.c][0],fillOpacity:1});
+ const mk=H.pins.map((p,i)=>{const r=reg[p.r],n=per[p.r]=(per[p.r]||0)+1,ang=n*2.399,rad=Math.min(1,Math.sqrt(n)/3.4);const sx=r[0]==='Leonida Keys'?150:(r[0]==='Port Gellhorn'||r[0]==='Ambrosia'?78:100),sy=r[0]==='Leonida Keys'?48:64;const m=L.circleMarker(toLL(cx(r[1])+Math.cos(ang)*rad*sx,cy(r[2])+Math.sin(ang)*rad*sy),{radius:7,color:'#0f1713',weight:2,fillColor:CAT[p.c][0],fillOpacity:1});
   m.bindPopup(`<b>${esc(p.n)}</b><br><small>${esc(CAT[p.c][1])} · ${esc(p.r)} · ${esc(p.st)}</small><p>${esc(p.d)}</p><small>Source: ${srcLink(p.src)}</small>`);m.addTo(map);return{m,p,i}});
  $('#pin-filters').innerHTML=Object.entries(CAT).map(([k,[c,l]])=>`<button type="button" class="on" data-c="${k}" aria-pressed="true"><i style="background:${c}"></i>${l} <small>${H.pins.filter(p=>p.c===k).length}</small></button>`).join('');
  const draw=()=>{const q=$('#pin-q').value.trim().toLowerCase();const vis=mk.filter(({p})=>on[p.c]&&(!q||(p.n+' '+p.d+' '+p.r).toLowerCase().includes(q)));mk.forEach(o=>{const v=vis.includes(o);if(v&&!map.hasLayer(o.m))o.m.addTo(map);if(!v&&map.hasLayer(o.m))map.removeLayer(o.m)});
@@ -159,4 +159,116 @@ if($('#leomap')&&window.L&&H.pins){const W=800,Hh=1200,cx=c=>(c-.5)/8*W,cy=r=>(r
 // ---- reveal
 if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.06});
  $$('.db-head,.db-card,.card,.hcard,.qa,.news-row,.dlc-row,.money-item,.gallery figure,.alert,.tips,.chapters details,.tl,.stat,.fcols>div').forEach(el=>{if(el.closest('.reveal'))return;const sib=[...el.parentElement.children].indexOf(el)%4;el.style.setProperty('--d',sib*70+'ms');el.classList.add('reveal');io.observe(el)})}
+})();
+
+/* ===== v6: cursor, hero video, transitions, tab bar, search, reading, loader ===== */
+(function(){
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const RM=matchMedia('(prefers-reduced-motion: reduce)');
+// --- cursor dot (desktop, fine pointer only)
+if(matchMedia('(hover:hover) and (pointer:fine)').matches){
+  const dot=document.createElement('div');dot.className='cdot off';dot.style.transform='translate3d(-100px,-100px,0)';dot.setAttribute('aria-hidden','true');document.body.appendChild(dot);document.documentElement.classList.add('has-cdot');
+  let x=-50,y=-50,tx=-50,ty=-50,raf=0;
+  const loop=()=>{x+=(tx-x)*(RM.matches?1:.35);y+=(ty-y)*(RM.matches?1:.35);dot.style.transform=`translate3d(${x}px,${y}px,0)`;raf=(Math.abs(tx-x)+Math.abs(ty-y)>.3)?requestAnimationFrame(loop):0};
+  addEventListener('pointermove',e=>{tx=e.clientX;ty=e.clientY;if(x<0){x=tx;y=ty}const t=e.target;const txt=t.closest&&t.closest('input,textarea,select,[contenteditable],.leaflet-container');dot.classList.toggle('off',!!txt);dot.classList.toggle('big',!txt&&!!(t.closest&&t.closest('a,button,label,summary,[role=button],.yt,.lb-item')));if(!raf)raf=requestAnimationFrame(loop)},{passive:true});
+  document.addEventListener('pointerleave',()=>dot.classList.add('off'));document.addEventListener('pointerenter',()=>dot.classList.remove('off'));
+  addEventListener('pointerdown',()=>dot.classList.add('down'));addEventListener('pointerup',()=>dot.classList.remove('down'));
+}
+// --- hero video: pause for reduced motion, toggle button, pause offscreen
+const vid=$('.hero-vid'),vt=$('.vid-toggle');
+if(vid){
+  const setP=p=>{if(p){vid.pause();}else{const pr=vid.play();pr&&pr.catch(()=>{})}if(vt){vt.setAttribute('aria-pressed',p?'true':'false');vt.setAttribute('aria-label',p?'Play background video':'Pause background video');vt.classList.toggle('paused',p)}};
+  let user=null;const apply=()=>setP(user!==null?user:RM.matches);
+  if(RM.matches){vid.removeAttribute('autoplay');vid.pause()}
+  apply();RM.addEventListener&&RM.addEventListener('change',apply);
+  vt&&vt.addEventListener('click',()=>{user=!vid.paused?true:false;setP(user)});
+  if('IntersectionObserver' in window)new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)vid.pause();else apply()})).observe(vid);
+}
+// --- page transitions: CSS @view-transition where supported, fade fallback otherwise
+const crossVT='onpagereveal' in window;
+if(!crossVT&&!RM.matches){
+  document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href]');if(!a||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||a.target==='_blank'||a.hasAttribute('download'))return;
+    const u=new URL(a.href,location.href);if(u.origin!==location.origin||(u.pathname===location.pathname&&u.hash))return;if(!/\.html$|\/$/.test(u.pathname))return;
+    e.preventDefault();document.documentElement.classList.add('leaving');setTimeout(()=>location.href=a.href,160)});
+  addEventListener('pageshow',()=>document.documentElement.classList.remove('leaving'));
+}
+// --- tab bar active state
+const pg=document.body.dataset.page||(document.body.classList.contains('home')?'index':'');
+$$('.tabbar a').forEach(a=>{const t=a.dataset.tab;if(t===pg||document.body.classList.contains('hub-'+t.toLowerCase())||(t==='index'&&document.body.classList.contains('home')))a.setAttribute('aria-current','page')});
+// --- prefill database search from ?q=
+const qp=new URLSearchParams(location.search).get('q');
+if(qp){const inp=$('#car-q')||$('#wep-q');if(inp){inp.value=qp;inp.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(()=>inp.scrollIntoView({block:'center'}),300)}}
+// --- global search overlay
+const sov=$('#sov'),sq=$('#sov-q'),sres=$('#sov-res');let IDX=null,sel=-1,lastFocus=null;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+async function load(){if(IDX)return IDX;try{const r=await fetch('search-index.json');IDX=await r.json()}catch(e){IDX=[]}return IDX}
+function score(it,terms){const t=norm(it.t),d=norm(it.d||''),x=norm(it.x||'');let s=0;for(const w of terms){if(t===w)s+=12;else if(t.startsWith(w))s+=8;else if(t.includes(w))s+=5;else if(d.includes(w))s+=2;else if(x.includes(w))s+=1;else return 0}
+  return s+({Guides:3,Tools:3,Database:3,Community:2,Home:2,Section:1}[it.k]||0)}
+function render(q){const terms=norm(q).trim().split(/\s+/).filter(Boolean);sel=-1;
+  if(!terms.length){sres.innerHTML='<li class="sov-empty">Try “bigfoot”, “infernus”, “family savings” or “trophy”.</li>';return}
+  const r=IDX.map(it=>[score(it,terms),it]).filter(a=>a[0]&&(!a[1].s||q.length>2)).sort((a,b)=>b[0]-a[0]).slice(0,24);
+  sres.innerHTML=r.length?r.map(([_,it],i)=>`<li role="option" id="sr${i}"><a href="${esc(it.u)}"><span class="sk">${esc(it.k==='Section'?'Section · '+(it.p||''):it.k)}${it.s?' · spoiler':''}</span><b>${esc(it.t)}</b><small>${esc((it.d||'').slice(0,120))}</small></a></li>`).join(''):`<li class="sov-empty">No results for “${esc(q)}”.</li>`}
+async function openS(){lastFocus=document.activeElement;sov.hidden=false;document.documentElement.classList.add('sov-open');requestAnimationFrame(()=>sov.classList.add('on'));sq.focus();await load();render(sq.value)}
+function closeS(){sov.classList.remove('on');document.documentElement.classList.remove('sov-open');setTimeout(()=>{sov.hidden=true},180);lastFocus&&lastFocus.focus&&lastFocus.focus()}
+if(sov){
+  document.addEventListener('click',e=>{if(e.target.closest('[data-search]')){e.preventDefault();openS()}});
+  $('#sov-x').addEventListener('click',closeS);sov.addEventListener('click',e=>{if(e.target===sov)closeS()});
+  sq.addEventListener('input',()=>IDX&&render(sq.value));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='/'&&sov.hidden&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)&&!document.activeElement.isContentEditable){e.preventDefault();openS();return}
+    if(sov.hidden)return;const items=$$('#sov-res a');
+    if(e.key==='Escape'){e.preventDefault();closeS()}
+    else if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!items.length)return;sel=(sel+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;items.forEach((a,i)=>a.classList.toggle('sel',i===sel));items[sel].scrollIntoView({block:'nearest'})}
+    else if(e.key==='Enter'&&document.activeElement===sq){const a=items[sel<0?0:sel];if(a){e.preventDefault();location.href=a.href}}
+    else if(e.key==='Tab'){const f=[sq,...items,$('#sov-x')];const i=f.indexOf(document.activeElement);if(e.shiftKey&&i<=0){e.preventDefault();f[f.length-1].focus()}else if(!e.shiftKey&&i===f.length-1){e.preventDefault();f[0].focus()}}
+  });
+}
+// --- reading progress (guides)
+const rb=$('.readbar i');
+if(rb&&document.body.classList.contains('guide')){document.documentElement.classList.add('has-readbar');const up=()=>{const h=document.documentElement.scrollHeight-innerHeight;rb.style.transform=`scaleX(${h>0?Math.min(1,scrollY/h):0})`};addEventListener('scroll',up,{passive:true});up()}
+// --- table of contents: scrollspy + mobile collapse
+const toc=$('.toc');
+if(toc){const links=$$('.toc-links a'),cur=$('.toc-cur'),tg=$('.toc-t');
+  const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+  const spy=()=>{let i=-1;secs.forEach((s,j)=>{if(s.getBoundingClientRect().top<innerHeight*.35)i=j});links.forEach((a,j)=>a.classList.toggle('on',j===i));if(cur)cur.textContent=i>=0?'· '+links[i].textContent:''};
+  addEventListener('scroll',spy,{passive:true});spy();
+  tg&&tg.addEventListener('click',()=>{const o=toc.classList.toggle('open');tg.setAttribute('aria-expanded',o)});
+  links.forEach(a=>a.addEventListener('click',()=>{toc.classList.remove('open');tg&&tg.setAttribute('aria-expanded','false')}));
+}
+})();
+
+/* ===== v8: time-of-day hero + Leonida traced ===== */
+(function(){
+  var fig=document.querySelector('.intro-media');
+  if(fig){
+    var h=new Date().getHours(),q=new URLSearchParams(location.search).get('tod');
+    var t=q||(h>=5&&h<9?'sunrise':h>=9&&h<17?'day':h>=17&&h<20?'sunset':'night');
+    var map={sunrise:'activities',day:'properties',night:'secrets'};
+    var name=document.getElementById('tod-name');if(name)name.textContent=t;
+    fig.setAttribute('data-tod',t);
+    if(map[t]){
+      var img=fig.querySelector('.tod-img'),v=fig.querySelector('.hero-vid');
+      if(img){
+        img.srcset='assets/img/'+map[t]+'-800.webp 800w, assets/img/'+map[t]+'.webp 1600w';
+        img.sizes='100vw';img.src='assets/img/'+map[t]+'.jpg';img.hidden=false;
+        fig.classList.add('tod-still');
+        if(v){try{v.pause();}catch(e){}v.removeAttribute('autoplay');v.preload='none';}
+      }
+    }
+  }
+  var tr=document.getElementById('trace'),svg=tr&&tr.querySelector('.trace-map');
+  if(!svg)return;
+  var rm=window.matchMedia('(prefers-reduced-motion: reduce)');
+  if(rm.matches){svg.style.setProperty('--p','1');return;}
+  var tick=false;
+  function upd(){
+    tick=false;
+    var r=tr.getBoundingClientRect(),span=tr.offsetHeight-window.innerHeight;
+    var p=span>0?Math.min(1,Math.max(0,-r.top/span)):1;
+    svg.style.setProperty('--p',p.toFixed(3));
+  }
+  svg.style.setProperty('--p','0');
+  window.addEventListener('scroll',function(){if(!tick){tick=true;requestAnimationFrame(upd);}},{passive:true});
+  window.addEventListener('resize',upd);upd();
 })();

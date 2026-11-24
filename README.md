@@ -1,4 +1,4 @@
-# GTA6 HQ: unofficial GTA 6 tips, clues and database (local preview)
+# Gatorline: unofficial GTA 6 tips, clues and news (local preview; live site still at the old GTA6 HQ URL)
 
 Unofficial fan site. Not affiliated with Rockstar Games or Take-Two Interactive.
 Hero art: purewallfr (DeviantArt). Official screenshots are © Rockstar Games and are credited where shown.
