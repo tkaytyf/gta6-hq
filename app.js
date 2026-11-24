@@ -141,9 +141,9 @@ const bd=$('#cboard');if(bd){const links=JSON.parse(bd.dataset.links),svg=bd.que
 if($('#leomap')&&window.L&&H.pins){const W=800,Hh=1200,cx=c=>(c-.5)/8*W,cy=r=>(r-.5)/12*Hh;
  const map=L.map('leomap',{crs:L.CRS.Simple,minZoom:-1,maxZoom:2,zoomSnap:.25,attributionControl:true});map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
  const toLL=(x,y)=>L.latLng(Hh-y,x);const bounds=L.latLngBounds(toLL(0,Hh),toLL(W,0));
- const cols='12345678',rows='ABCDEFGHIJKL';let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${Hh}"><rect width="${W}" height="${Hh}" fill="#13213a"/>`;
- for(let i=0;i<=8;i++)svg+=`<line x1="${i*100}" y1="0" x2="${i*100}" y2="${Hh}" stroke="#2b3d63" stroke-width="1"/>`;for(let j=0;j<=12;j++)svg+=`<line x1="0" y1="${j*100}" x2="${W}" y2="${j*100}" stroke="#2b3d63" stroke-width="1"/>`;
- for(let i=0;i<8;i++)svg+=`<text x="${i*100+50}" y="22" fill="#6f84ad" font-size="16" text-anchor="middle" font-family="Arial">${cols[i]}</text>`;for(let j=0;j<12;j++)svg+=`<text x="14" y="${j*100+56}" fill="#6f84ad" font-size="16" font-family="Arial">${rows[j]}</text>`;
+ const cols='12345678',rows='ABCDEFGHIJKL';let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${Hh}"><rect width="${W}" height="${Hh}" fill="#120e1b"/>`;
+ for(let i=0;i<=8;i++)svg+=`<line x1="${i*100}" y1="0" x2="${i*100}" y2="${Hh}" stroke="#231c30" stroke-width="1"/>`;for(let j=0;j<=12;j++)svg+=`<line x1="0" y1="${j*100}" x2="${W}" y2="${j*100}" stroke="#231c30" stroke-width="1"/>`;
+ for(let i=0;i<8;i++)svg+=`<text x="${i*100+50}" y="22" fill="#6e6385" font-size="16" text-anchor="middle" font-family="Arial">${cols[i]}</text>`;for(let j=0;j<12;j++)svg+=`<text x="14" y="${j*100+56}" fill="#6e6385" font-size="16" font-family="Arial">${rows[j]}</text>`;
  const RC={'Mount Kalaga':'#3f6b4f','Port Gellhorn':'#7a5a3a','Ambrosia':'#6b5a2f','Vice City':'#7b3b66','Grassrivers':'#2f6a5a','Leonida Keys':'#2f5f7a'};
  H.regions.forEach(([n,c,r,sq])=>{const rx=n==='Leonida Keys'?170:(n==='Port Gellhorn'||n==='Ambrosia'?95:120),ry=n==='Leonida Keys'?62:80;svg+=`<ellipse cx="${cx(c)}" cy="${cy(r)}" rx="${rx}" ry="${ry}" fill="${RC[n]}" fill-opacity=".55" stroke="#fff9cb" stroke-opacity=".35"/><text x="${cx(c)}" y="${cy(r)-ry-26}" fill="#fff9cb" font-size="24" font-weight="700" text-anchor="middle" font-family="Arial Narrow,Arial">${n.toUpperCase()}</text><text x="${cx(c)}" y="${cy(r)-ry-8}" fill="#e7d6ff" font-size="14" text-anchor="middle" font-family="Arial">Grid ${sq}</text>`});
  svg+='</svg>';L.imageOverlay('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg),bounds,{alt:'Schematic grid map of Leonida regions'}).addTo(map);map.fitBounds(bounds);map.setMaxBounds(bounds.pad(.2));
@@ -158,5 +158,5 @@ if($('#leomap')&&window.L&&H.pins){const W=800,Hh=1200,cx=c=>(c-.5)/8*W,cy=r=>(r
  $$('#pin-filters button').forEach(b=>b.onclick=()=>{on[b.dataset.c]=!on[b.dataset.c];b.classList.toggle('on');b.setAttribute('aria-pressed',on[b.dataset.c]);draw()});$('#pin-q').addEventListener('input',draw);draw()}
 // ---- reveal
 if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.06});
- $$('.db-head,.db-card,.card,.news-row,.dlc-row,.money-item,.gallery figure,.alert,.tips,.chapters details,.tl,.stat').forEach(el=>{el.classList.add('reveal');io.observe(el)})}
+ $$('.db-head,.db-card,.card,.hcard,.qa,.news-row,.dlc-row,.money-item,.gallery figure,.alert,.tips,.chapters details,.tl,.stat,.fcols>div').forEach(el=>{if(el.closest('.reveal'))return;const sib=[...el.parentElement.children].indexOf(el)%4;el.style.setProperty('--d',sib*70+'ms');el.classList.add('reveal');io.observe(el)})}
 })();
