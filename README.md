@@ -1,9 +1,9 @@
-# Gatorline: unofficial GTA 6 tips, clues and news (local preview; live site still at the old GTA6 HQ URL)
+# Gatorline: unofficial GTA 6 tips, clues and news 
 
 Unofficial fan site. Not affiliated with Rockstar Games or Take-Two Interactive.
 Hero art: purewallfr (DeviantArt). Official screenshots are © Rockstar Games and are credited where shown.
 
-**Live:** https://tkaytyf.github.io/gta6-hq/ (GitHub Pages, main branch root). Published with tkay's approval.
+**Live:** https://gatorlinehq.com/ (GitHub Pages custom domain, main branch root; `CNAME` is written by the generator). Old URL https://tkaytyf.github.io/gta6-hq/ redirects there.
 
 ## Run locally
 ```
@@ -28,9 +28,16 @@ The page generator is in `/workspace/gta6-site-src/`. Run `python3 main.py` ther
 QA scripts are in `/workspace/gta6-site-src/scripts/`.
 
 ## Before publishing
-- `SITE` in `gta6-site-src/hq.py` is a guess (`https://tkaytyf.github.io/gta6-hq/`). It feeds the canonical, OG and sitemap URLs, so set it to the real URL.
+- `SITE` in `gta6-site-src/hq.py` is `https://gatorlinehq.com/`. It feeds the canonical, OG, sitemap and robots URLs.
 - Some official images are hotlinked from rockstargames.com. They will break if Rockstar changes its site. They can be downloaded only if the usage terms allow it.
 - These are placeholders until tkay provides real details: Discord, socials, newsletter, tip form, ad slots and tkay's clips.
 
 ## Content rules
 Every fact links to its source. When outlets disagree, the page says so. Anything unconfirmed is marked "coming soon".
+
+## v10 additions (local, Nov 24, 2026)
+- New pages: Call it in (`call.html`), My dashboard + gator rank (`dashboard.html`), The Swamp Report (`swamp-report.html`), Quick answers with FAQ schema (`answers.html`), Car compare (`car-compare.html`), Mission walkthroughs (`walkthroughs.html`), Ask Gatorline (`ask.html`), About (`about.html`), Offline page (`offline.html`).
+- Breaking banner is driven by `news.json` (`breaking.on`, `id`, `text`, `href`). Set `on:false` to hide it.
+- PWA: `manifest.webmanifest` + `sw.js` (network-first pages, cache-first assets; offline checklist, map and guides).
+- Swamp sounds: self-generated CC0 loop in `assets/audio/` (see README.txt there). Off by default.
+- All personal data stays in localStorage under `gta6hq:` keys.

@@ -35,8 +35,8 @@ setup({data:D.weapons,q:'#wep-q',table:'#wep-table',count:'#wep-count',selects:[
   return `<tr><td><span${b}>${esc(w.name)}</span></td><td>${esc(w.cls)}</td><td><span${b}>${esc(w.area)}</span></td><td><span class="pill ${hp(w.how)}">${esc(w.how)}</span> <span${b}>${esc(w.where)}</span></td></tr>`}});
 // chapters (collapsed = spoiler gate)
 const notes={1:'Point of no return: starting Tourist Trap locks you into the last three missions of the chapter. Read the Money guide first. (GTA6.house)',2:'Moses starts buying stolen cars (PC Gamer). Near the end of the chapter the story wants $15,000 put away (GTA6.house). CompletionMap, citing Eurogamer, also lists a $100,000 Family Savings goal.',3:'You get the snap gun for picking locks, and Randy starts buying high-end cars. (PC Gamer)',4:'Pilot Pete\'s timed drop jobs become regular work. (PC Gamer)',5:'Final chapter. Late missions end with choices, so save first. (CutsceneWire)'};
-const keys=['Tourist Trap','Buck Me','Moses'],mx=Math.max(...Object.values(D.chapters).map(c=>c.missions.length));
-if($('#chapters'))$('#chapters').innerHTML=Object.entries(D.chapters).map(([n,c])=>`<details><summary><span><span class="n">CH ${n}</span>${esc(c.title)}</span><small>${c.missions.length} missions · tap to reveal</small></summary><ol>${c.missions.map(m=>`<li class="${keys.includes(m)?'key':''}">${esc(m)}</li>`).join('')}</ol><p class="chnote">💡 ${esc(notes[n])}</p></details>`).join('');
+const keys=['Tourist Trap','Buck Me','Moses'];
+if($('#chapters')&&D.chapters)$('#chapters').innerHTML=Object.entries(D.chapters).map(([n,c])=>`<details><summary><span><span class="n">CH ${n}</span>${esc(c.title)}</span><small>${c.missions.length} missions · tap to reveal</small></summary><ol>${c.missions.map(m=>`<li class="${keys.includes(m)?'key':''}">${esc(m)}</li>`).join('')}</ol><p class="chnote">💡 ${esc(notes[n])}</p></details>`).join('');
 // ---- generic click-to-load YouTube facades
 $$('.yt').forEach(el=>{const go=()=>{el.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${el.dataset.id}?autoplay=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="${esc(el.getAttribute('aria-label')||'Video')}"></iframe>`};el.addEventListener('click',go);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})});
 // ---- home: horizontal tips track
@@ -159,6 +159,89 @@ if($('#leomap')&&window.L&&H.pins){const W=800,Hh=1200,cx=c=>(c-.5)/8*W,cy=r=>(r
 // ---- reveal
 if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.06});
  $$('.db-head,.db-card,.card,.hcard,.qa,.news-row,.dlc-row,.money-item,.gallery figure,.alert,.tips,.chapters details,.tl,.stat,.fcols>div').forEach(el=>{if(el.closest('.reveal'))return;const sib=[...el.parentElement.children].indexOf(el)%4;el.style.setProperty('--d',sib*70+'ms');el.classList.add('reveal');io.observe(el)})}
+// ===== v10: Gatorline features (all local, no network except same-origin files) =====
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const dayDiff=(a,b)=>Math.round((new Date(b+'T12:00')-new Date(a+'T12:00'))/864e5);
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const toast=(t)=>{let el=$('#gl-toast');if(!el){el=document.createElement('div');el.id='gl-toast';el.className='gl-toast';el.setAttribute('role','status');document.body.appendChild(el)}el.innerHTML=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),3600)};
+// ---- collectible tracker (shares the checklist's trk store)
+const pslug=s=>'pin-'+String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,48);
+const PCAT={weapon:'Weapons',collectible:'Collectibles',secret:'Secrets',money:'Money',store:'Stores',wildlife:'Wildlife',car:'Cars'};
+$$('[data-pin-trk]').forEach(box=>{if(!H.pins)return;const P=H.pins.filter(p=>p.st==='verified');const by={};P.forEach(p=>(by[p.c]=by[p.c]||[]).push(p));
+ box.innerHTML=Object.entries(by).map(([c,ps])=>`<fieldset class="pt-group"><legend>${esc(PCAT[c]||c)} <span class="pt-n" data-ptc="${esc(c)}"></span></legend>${ps.map(p=>`<label class="pt-item"><input type="checkbox" data-pin="${pslug(p.n)}" data-c="${esc(c)}"><span><b>${esc(p.n)}</b><small>${esc(p.r)} · ${srcLink(p.src)}</small></span></label>`).join('')}</fieldset>`).join('')+`<p class="pt-sum hint"></p>`;
+ const sync=()=>{$$('[data-pin]').forEach(i=>{i.checked=!!trk[i.dataset.pin]});box.querySelectorAll('[data-ptc]').forEach(n=>{const all=box.querySelectorAll(`[data-c="${n.dataset.ptc}"]`);n.textContent=[...all].filter(i=>i.checked).length+'/'+all.length});const all=box.querySelectorAll('[data-pin]'),d=[...all].filter(i=>i.checked).length;box.querySelector('.pt-sum').textContent=`${d} of ${all.length} verified pins found`};
+ box.addEventListener('change',e=>{const i=e.target.closest('[data-pin]');if(!i)return;trk[i.dataset.pin]=i.checked;if(!i.checked)delete trk[i.dataset.pin];LS.set('trk',trk);sync();rank()});sync()});
+// ---- tool usage (1 point per tool per day, max 5/day)
+if(document.body.classList.contains('hub-tools')&&!/^(tools|dashboard)$/.test(document.body.dataset.page)){const mark=()=>{const u=LS.get('uses',{}),t=today();u[t]=u[t]||{};if(!u[t][document.body.dataset.page]){u[t][document.body.dataset.page]=1;LS.set('uses',u);rank()}};const m=$('main');if(m){m.addEventListener('input',mark,{once:true});m.addEventListener('click',e=>{if(e.target.closest('button,select,input'))mark()})}}
+// ---- gator rank
+const RANKS=[['Hatchling',0],['Swamp Rat',10],['Mangrove Scout',25],['Bull Gator',50],['Swamp King',100]];
+function points(){const t=LS.get('trk',{}),ck=Object.keys(t).filter(k=>t[k]&&!k.startsWith('pin-')).length,pins=Object.keys(t).filter(k=>t[k]&&k.startsWith('pin-')).length;
+ const u=LS.get('uses',{}),uses=Object.values(u).reduce((a,d)=>a+Math.min(5,Object.keys(d).length),0),st=LS.get('streak',{n:0,best:0,days:0}),calls=LS.get('calls',[]).length;
+ return{ck,pins,uses,streak:st.n||0,sdays:st.days||0,calls,pts:ck+pins+uses+(st.days||0)*2+calls*3}}
+function rankOf(p){let r=0;RANKS.forEach((x,i)=>{if(p>=x[1])r=i});return r}
+function rank(){const P=points(),r=rankOf(P.pts),prev=LS.get('rank',0);if(r>prev){LS.set('rank',r);toast(`<b>Rank up:</b> ${RANKS[r][0]} · ${P.pts} pts`)}else if(r<prev)LS.set('rank',r);if($('#gr-card'))dash();return P}
+function dash(){const P=points(),r=rankOf(P.pts),nx=RANKS[r+1];$('#gr-name').textContent=RANKS[r][0];$('#gr-stamp').textContent=r===4?'Top rank':'Rank '+(r+1)+' of 5';
+ const lo=RANKS[r][1],hi=nx?nx[1]:lo,pc=nx?Math.round((P.pts-lo)/(hi-lo)*100):100;$('#gr-bar i').style.width=pc+'%';$('#gr-bar').setAttribute('aria-valuenow',pc);$('#gr-next').textContent=nx?`${hi-P.pts} pts to ${nx[0]}`:'You run this swamp.';
+ $('#gr-pts').textContent=P.pts;$('#ds-ck').textContent=P.ck;$('#ds-pins').textContent=P.pins;$('#ds-streak').textContent=P.streak;$('#ds-calls').textContent=P.calls;$$('.ranks li').forEach((li,i)=>{li.classList.toggle('on',i<=r);li.classList.toggle('cur',i===r)})}
+if($('#gr-card')){dash();$('#dash-export').onclick=()=>{const o={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('gta6hq:'))o[k]=localStorage.getItem(k)}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:'application/json'}));a.download='gatorline-my-data.json';a.click()};
+ $('#dash-reset').onclick=()=>{if(!confirm('Reset your rank, checklist, streak and logged tips on this device?'))return;Object.keys(localStorage).filter(k=>k.startsWith('gta6hq:')).forEach(k=>localStorage.removeItem(k));location.reload()}}
+// ---- daily fact + streak
+if($('#fact')&&H.clues){const C=H.clues,day=Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5),c=C[day%C.length];$('#fact-t').textContent=c.t;$('#fact-s').innerHTML='Source: '+srcLink(c.src);$('#fact-day').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+ const st=()=>LS.get('streak',{n:0,best:0,days:0,last:''}),paint=()=>{const s=st(),done=s.last===today();$('#fact-ok').disabled=done;$('#fact-ok').textContent=done?'Done for today':'Got it · keep my streak';$('#fact-msg').textContent=s.n?`${s.n}-day streak · best ${s.best}`:'Start a streak today.'};
+ $('#fact-ok').onclick=()=>{const s=st(),t=today();if(s.last===t)return;s.n=s.last&&dayDiff(s.last,t)===1?s.n+1:1;s.best=Math.max(s.best||0,s.n);s.days=(s.days||0)+1;s.last=t;LS.set('streak',s);paint();rank()};paint()}
+if($('#dyk')){const s=LS.get('streak',{n:0}),el=document.createElement('a');el.className='streak-chip';el.href='dashboard.html#fact';el.textContent=s.n?`🔥 ${s.n}-day streak · keep it`:'Start a daily streak';$('#dyk .db-head').appendChild(el)}
+// ---- Call it in
+if($('#call')){const f=$('#call'),log=$('#call-log'),TY={tip:'Tip',clue:'Clue',glitch:'Glitch',news:'News'};
+ const draw=()=>{const L=LS.get('calls',[]);log.innerHTML=L.length?L.slice().reverse().map(c=>`<li class="call-item"><div class="ci-top"><span class="ci-type">${esc(TY[c.type]||c.type)} · ${esc(c.where)}</span><span class="stamp st-pending">Pending review</span></div><p>${esc(c.text)}</p><p class="hint">${new Date(c.ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${c.src?` · <a href="${esc(c.src)}" target="_blank" rel="noopener nofollow">source</a>`:''}${c.name?' · '+esc(c.name):''}</p></li>`).join(''):'<li class="empty">No calls yet. Your logged tips show up here with their status.</li>'};
+ const body=()=>`Type: ${$('#call-type').value}\nWhere: ${$('#call-where').value}\n\n${$('#call-text').value}\n\nSource: ${$('#call-src').value||'none'}\nCredit: ${$('#call-name').value||'anonymous'}`;
+ const upd=()=>{$('#call-mail').href='mailto:?subject='+encodeURIComponent('Gatorline tip: '+$('#call-type').value)+'&body='+encodeURIComponent(body())};f.addEventListener('input',upd);upd();
+ f.addEventListener('submit',e=>{e.preventDefault();const t=$('#call-text').value.trim(),s=$('#call-src').value.trim();
+  if(t.length<10){$('#call-msg').textContent='Add a bit more detail (10+ characters).';$('#call-text').focus();return}
+  if(s&&!/^https?:\/\//i.test(s)){$('#call-msg').textContent='The source should be a link starting with http.';$('#call-src').focus();return}
+  if(!$('#call-ok').checked){$('#call-msg').textContent='Please tick the box to confirm.';return}
+  const L=LS.get('calls',[]);L.push({type:$('#call-type').value,where:$('#call-where').value,text:t.slice(0,1200),src:s,name:$('#call-name').value.trim().slice(0,40),ts:Date.now(),status:'pending'});LS.set('calls',L);
+  f.reset();upd();$('#call-msg').textContent='Logged. Status: pending review.';draw();rank()});
+ $('#call-clear').onclick=()=>{if(confirm('Clear your logged calls?')){LS.set('calls',[]);draw();rank()}};draw()}
+// ---- car compare
+if($('#cc')&&H.cars){const C=H.cars,ss=['#cc-1','#cc-2','#cc-3'];ss.forEach((s,i)=>{$(s).innerHTML=(i?'<option value="">— none —</option>':'')+C.map((c,j)=>`<option value="${j}">${esc(c.b+' '+c.n)} · ${esc(c.c)}</option>`).join('')});
+ const h=hashGet();ss.forEach((s,i)=>{const v=h['c'+(i+1)];if(v!=null&&C[v])$(s).value=v;else if(!i)$(s).value=0;else if(i===1&&!h.c2)$(s).value=1});
+ const draw=()=>{const pick=ss.map(s=>$(s).value).filter(v=>v!=='').map(v=>C[v]);const bar=(v,best)=>`<div class="cc-bar${v===best?' best':''}"><i style="--w:${v*10}%"></i><b>${v.toFixed(1)}</b></div>`;
+  const bs=Math.max(...pick.map(c=>c.s)),ba=Math.max(...pick.map(c=>c.a));
+  $('#cc-out').innerHTML=`<div class="cc-grid" style="--n:${pick.length}">${pick.map(c=>`<article class="cc-card"><p class="case"><span>${esc(c.c)}</span><span class="stamp st-verified">Sourced</span></p><h3>${esc(c.b)} ${esc(c.n)}</h3><p class="cc-l">Top speed</p>${bar(c.s,bs)}<p class="cc-l">Acceleration</p>${bar(c.a,ba)}<p class="hint">${esc(c.note)}</p></article>`).join('')}</div>`;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>$$('#cc-out .cc-bar').forEach(b=>b.classList.add('in'))));
+  const p=new URLSearchParams();ss.forEach((s,i)=>{if($(s).value!=='')p.set('c'+(i+1),$(s).value)});history.replaceState(null,'','#'+p)};
+ ss.forEach(s=>$(s).addEventListener('input',draw));draw();$('#cc-copy').onclick=()=>copy(location.href,$('#cc-msg'))}
+// ---- mission walkthroughs
+if($('#wt')&&D.chapters){const M=[];Object.entries(D.chapters).forEach(([n,ch])=>ch.missions.forEach((m,i)=>M.push({ch:n,ct:ch.title,i:i+1,n:m,tot:ch.missions.length})));
+ const TIPS={'Tourist Trap':['Point of no return. Only Family Savings carries over, up to $5,000, so bank it first.','https://gta6.house/guides/gta-6-buckme-limits-family-savings-goals','GTA6.house'],'Credit Check':['Unlocks the Dye Pack Jammer. Without it, marked bank bills are ruined.','https://checkpointguides.com/gta-6-bank-robbery/','Checkpoint Guides']};
+ const sel=$('#wt-m'),sp=$('#wt-spoil');const label=(m,show)=>`Ch. ${m.ch} · Mission ${m.i}${show?': '+m.n:''}`;
+ const fill=()=>{const v=sel.value;sel.innerHTML=M.map((m,j)=>`<option value="${j}">${esc(label(m,sp.checked))}</option>`).join('');sel.value=v||hashGet().m||0};
+ const draw=()=>{const m=M[sel.value]||M[0],t=TIPS[m.n],show=sp.checked;$('#wt-out').innerHTML=`<p class="case"><span>Chapter ${m.ch} · ${esc(show?m.ct:'title hidden')}</span><span>Mission ${m.i} of ${m.tot}</span></p><h3>${show?esc(m.n):'Mission name hidden'}</h3>
+  <dl class="walk-dl"><div><dt>Objective</dt><dd><span class="soon-inline">TBA</span></dd></div><div><dt>Unlocks</dt><dd>${m.i>1?'After mission '+(m.i-1)+' of chapter '+m.ch:'Start of chapter '+m.ch}</dd></div><div><dt>Rewards</dt><dd><span class="soon-inline">TBA</span></dd></div><div><dt>Missable</dt><dd><span class="soon-inline">TBA</span></dd></div></dl>
+  <h4>Steps</h4><ol class="walk-steps"><li><span class="soon-inline">TBA</span> We add steps once they're verified.</li></ol>${t?`<div class="tips-list"><p class="ok">${esc(t[0])}</p></div><p class="srcs">Source: <a href="${t[1]}" target="_blank" rel="noopener">${t[2]}</a></p>`:''}<p class="srcs">Mission order: <a href="https://www.pcgamer.com/games/grand-theft-auto/gta-6-missions-list/" target="_blank" rel="noopener">PC Gamer</a></p>`;history.replaceState(null,'','#m='+sel.value)};
+ sp.addEventListener('change',()=>{fill();draw()});sel.addEventListener('input',draw);fill();draw()}
+// ---- Ask Gatorline
+if($('#ask')){const QA=JSON.parse(($('#ask-qa')||{}).textContent||'[]');let IDX=null;const stop=new Set('a an the in of to do does how what when where why is are can you i my for gta 6 vi it on with and or'.split(' '));
+ const tok=s=>String(s).toLowerCase().replace(/[^a-z0-9$ ]+/g,' ').split(/\s+/).filter(w=>w&&!stop.has(w));
+ const score=(q,t)=>{const tt=tok(t).join(' ');return q.reduce((a,w)=>a+(tt.includes(w)?(w.length>3?2:1):0),0)};
+ const run=async q=>{const qt=tok(q);if(!qt.length){$('#ask-out').innerHTML='';return}if(!IDX){try{IDX=await (await fetch('search-index.json')).json()}catch(e){IDX=[]}}
+  const qa=QA.map(x=>({x,s:score(qt,x.q+' '+x.a)})).filter(r=>r.s).sort((a,b)=>b.s-a.s);
+  const pg=IDX.map(x=>({x,s:score(qt,(x.t||'')+' '+(x.d||'')+' '+(x.x||''))})).filter(r=>r.s&&!r.x.s).sort((a,b)=>b.s-a.s).slice(0,6);
+  const top=qa[0];$('#ask-out').innerHTML=(top?`<div class="answer-box ask-top"><p class="case"><span>Best answer</span><span class="stamp st-verified">Verified</span></p><h3>${esc(top.x.q)}</h3><p>${esc(top.x.a)}</p><p class="srcs">Source: <a href="${esc(top.x.u)}" target="_blank" rel="noopener">${esc(top.x.l)}</a> · <a href="answers.html#${top.x.id}">All answers</a></p></div>`:`<div class="answer-box ask-top"><p class="case"><span>No verified answer yet</span><span class="stamp st-pending">TBA</span></p><p>We don't have a sourced answer for that. Know it? <a href="call.html">Call it in</a>.</p></div>`)+
+   (pg.length?`<h3 class="ask-h">Related on Gatorline</h3><ul class="ask-res">${pg.map(r=>`<li><a href="${esc(r.x.u)}"><b>${esc(r.x.t)}</b><small>${esc((r.x.d||'').slice(0,110))}</small></a></li>`).join('')}</ul>`:'')};
+ $('#ask').addEventListener('submit',e=>{e.preventDefault();run($('#ask-q').value)});$$('#ask-chips .chip').forEach(b=>b.onclick=()=>{$('#ask-q').value=b.textContent;run(b.textContent)});
+ const q0=new URLSearchParams(location.search).get('q');if(q0){$('#ask-q').value=q0;run(q0)}}
+// ---- shareable tip cards (canvas, downloaded or shared; nothing uploaded)
+$$('.feat[id^="tip-"] .feat-text').forEach(ft=>{const b=document.createElement('button');b.type='button';b.className='bp bp-ghost sm share-card';b.innerHTML='Share card';ft.appendChild(b);
+ b.onclick=async()=>{const cv=document.createElement('canvas');cv.width=1200;cv.height=630;const x=cv.getContext('2d');await document.fonts.ready;
+  x.fillStyle='#09100e';x.fillRect(0,0,1200,630);const g=x.createRadialGradient(1100,0,0,1100,0,700);g.addColorStop(0,'rgba(240,162,75,.22)');g.addColorStop(1,'rgba(240,162,75,0)');x.fillStyle=g;x.fillRect(0,0,1200,630);
+  x.fillStyle='#f0a24b';x.fillRect(72,72,96,4);const lab=(ft.querySelector('.case span')||{}).textContent||'Tip line';x.font='500 22px "IBM Plex Mono", monospace';x.fillStyle='#8fa886';x.fillText(lab.toUpperCase(),72,128);
+  const title=(ft.querySelector('h2')||{}).innerText||'';x.fillStyle='#f2eee4';x.font='800 84px "Big Shoulders Display", sans-serif';title.toUpperCase().split('\n').slice(0,2).forEach((l,i)=>x.fillText(l,72,230+i*86,1056));
+  const body=((ft.querySelector('.body')||{}).innerText||'').split('\n')[0];x.font='400 28px Manrope, sans-serif';x.fillStyle='#b4bdae';const words=body.split(' ');let line='',y=420,n=0;for(const w of words){if(x.measureText(line+w).width>1000){x.fillText(line,72,y);y+=40;line='';if(++n>=3)break}line+=w+' '}if(n<3)x.fillText(line,72,y);
+  x.font='800 34px "Big Shoulders Display", sans-serif';x.fillStyle='#f2eee4';x.fillText('GATOR',72,572);const gw=x.measureText('GATOR').width;x.fillStyle='#f0a24b';x.fillText('LINE',72+gw,572);const lw=x.measureText('LINE').width;x.font='500 16px "IBM Plex Mono", monospace';x.fillStyle='#b4bdae';x.fillText('gatorlinehq.com',72+gw+lw+20,568);x.font='500 16px "IBM Plex Mono", monospace';x.fillStyle='#8fa886';x.textAlign='right';x.fillText('Unofficial fan site · not affiliated with Rockstar',1128,572);x.textAlign='left';const so=((ft.querySelector('.srcs')||{}).innerText||'').slice(0,90);if(so){x.fillStyle='#b4bdae';x.fillText(so,72,y+56)}
+  cv.toBlob(async bl=>{const file=new File([bl],'gatorline-tip.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'Gatorline tip'});return}catch(e){}}const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='gatorline-tip.png';a.click()},'image/png')}});
+rank();
+
 })();
 
 /* ===== v6: cursor, hero video, transitions, tab bar, search, reading, loader ===== */
@@ -175,8 +258,9 @@ if(matchMedia('(hover:hover) and (pointer:fine)').matches){
   addEventListener('pointerdown',()=>dot.classList.add('down'));addEventListener('pointerup',()=>dot.classList.remove('down'));
 }
 // --- hero video: pause for reduced motion, toggle button, pause offscreen
+const todT=new URLSearchParams(location.search).get('tod')||(h=>h>=5&&h<9?'sunrise':h>=9&&h<17?'day':h>=17&&h<20?'sunset':'night')(new Date().getHours());
 const vid=$('.hero-vid'),vt=$('.vid-toggle');
-if(vid){
+if(vid&&todT==='sunset'){
   const setP=p=>{if(p){vid.pause();}else{const pr=vid.play();pr&&pr.catch(()=>{})}if(vt){vt.setAttribute('aria-pressed',p?'true':'false');vt.setAttribute('aria-label',p?'Play background video':'Pause background video');vt.classList.toggle('paused',p)}};
   let user=null;const apply=()=>setP(user!==null?user:RM.matches);
   if(RM.matches){vid.removeAttribute('autoplay');vid.pause()}
@@ -271,4 +355,51 @@ if(toc){const links=$$('.toc-links a'),cur=$('.toc-cur'),tg=$('.toc-t');
   svg.style.setProperty('--p','0');
   window.addEventListener('scroll',function(){if(!tick){tick=true;requestAnimationFrame(upd);}},{passive:true});
   window.addEventListener('resize',upd);upd();
+})();
+
+/* ===== v10b: sounds, breaking banner, lightbox, count-up, PWA ===== */
+(function(){
+  var $=function(s){return document.querySelector(s)},$$=function(s){return [].slice.call(document.querySelectorAll(s))};
+  var get=function(k,d){try{var v=localStorage.getItem('gta6hq:'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set=function(k,v){try{localStorage.setItem('gta6hq:'+k,JSON.stringify(v))}catch(e){}};
+  var RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // swamp sounds: off by default, self-generated CC0 loop, remembered
+  var au=null,btns=$$('[data-sound]');
+  function paint(on){btns.forEach(function(b){b.setAttribute('aria-pressed',on?'true':'false');b.setAttribute('aria-label','Swamp sounds: '+(on?'on':'off'));b.classList.toggle('on',on)})}
+  function play(){if(!au){au=new Audio();au.loop=true;au.volume=0;au.preload='auto';au.src=au.canPlayType('audio/ogg; codecs=opus')?'assets/audio/swamp.ogg':'assets/audio/swamp.m4a'}
+    var p=au.play();if(p&&p.catch)p.catch(function(){});var v=0,t=setInterval(function(){v=Math.min(.35,v+.035);au.volume=v;if(v>=.35)clearInterval(t)},80)}
+  function stop(){if(!au)return;var t=setInterval(function(){au.volume=Math.max(0,au.volume-.05);if(au.volume<=0){clearInterval(t);au.pause()}},60)}
+  btns.forEach(function(b){b.addEventListener('click',function(){var on=!get('sound',false);set('sound',on);paint(on);on?play():stop()})});
+  if(get('sound',false)){paint(true);var kick=function(){play();removeEventListener('pointerdown',kick);removeEventListener('keydown',kick)};addEventListener('pointerdown',kick);addEventListener('keydown',kick)}
+  document.addEventListener('visibilitychange',function(){if(!au)return;if(document.hidden)au.pause();else if(get('sound',false))au.play().catch(function(){})});
+  // breaking banner from news.json
+  fetch('news.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null}).then(function(n){var b=n&&n.breaking;if(!b||!b.on||get('brk',null)===b.id)return;
+    var el=document.createElement('aside');el.className='breaking';el.setAttribute('aria-label','Breaking news');
+    el.innerHTML='<span class="br-tag">Breaking</span><a href="'+b.href+'">'+b.text.replace(/</g,'&lt;')+'</a><button type="button" class="br-x" aria-label="Dismiss">\u00d7</button>';
+    document.body.appendChild(el);requestAnimationFrame(function(){el.classList.add('on')});el.querySelector('.br-x').onclick=function(){set('brk',b.id);el.remove()}}).catch(function(){});
+  // count-up stats
+  var nums=$$('[data-count], .stat b');if('IntersectionObserver' in window&&!RM){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting)return;io.unobserve(e.target);var el=e.target,txt=el.textContent,m=txt.match(/^([^0-9]*)([0-9][0-9,]*)(.*)$/);if(!m)return;var end=parseInt(m[2].replace(/,/g,''),10);if(!end||end>100000)return;var t0=performance.now(),d=900;
+    (function f(t){var k=Math.min(1,(t-t0)/d),v=Math.round(end*(1-Math.pow(1-k,3)));el.textContent=m[1]+(m[2].indexOf(',')>-1?v.toLocaleString('en-US'):v)+m[3];if(k<1)requestAnimationFrame(f)})(t0)})},{threshold:.6});
+    nums.forEach(function(n){if(!n.closest('#gr-card,#dash-stats'))io.observe(n)})}
+  // lightbox: swipe, zoom, captions
+  var imgs=$$('.gallery img, .fa-img img, .photo img, .lb');if(imgs.length){var lb=document.createElement('div');lb.className='lbox';lb.setAttribute('role','dialog');lb.setAttribute('aria-modal','true');lb.setAttribute('aria-label','Image viewer');lb.hidden=true;
+    lb.innerHTML='<figure><img alt=""><figcaption></figcaption></figure><button class="lb-x icon-btn" aria-label="Close">\u00d7</button><button class="lb-p icon-btn" aria-label="Previous">\u2190</button><button class="lb-n icon-btn" aria-label="Next">\u2192</button>';document.body.appendChild(lb);
+    var li=lb.querySelector('img'),cap=lb.querySelector('figcaption'),cur=0,last=null,zoom=false;
+    function show(i){cur=(i+imgs.length)%imgs.length;var im=imgs[cur];li.src=im.currentSrc||im.src;li.alt=im.alt||'';var c=im.closest('figure')&&im.closest('figure').querySelector('figcaption');cap.textContent=(c&&c.textContent)||im.alt||'';zoom=false;lb.classList.remove('zoom')}
+    function open(i){last=document.activeElement;show(i);lb.hidden=false;document.body.style.overflow='hidden';lb.querySelector('.lb-x').focus()}
+    function close(){lb.hidden=true;document.body.style.overflow='';if(last)last.focus()}
+    imgs.forEach(function(im,i){im.style.cursor='zoom-in';im.setAttribute('tabindex','0');im.setAttribute('role','button');im.addEventListener('click',function(e){e.preventDefault();open(i)});im.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();open(i)}})});
+    lb.querySelector('.lb-x').onclick=close;lb.querySelector('.lb-p').onclick=function(){show(cur-1)};lb.querySelector('.lb-n').onclick=function(){show(cur+1)};
+    li.addEventListener('dblclick',function(){zoom=!zoom;lb.classList.toggle('zoom',zoom)});lb.addEventListener('click',function(e){if(e.target===lb)close()});
+    addEventListener('keydown',function(e){if(lb.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')show(cur+1);if(e.key==='ArrowLeft')show(cur-1)});
+    var sx=null;lb.addEventListener('touchstart',function(e){if(e.touches.length===1&&!zoom)sx=e.touches[0].clientX},{passive:true});lb.addEventListener('touchend',function(e){if(sx===null)return;var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)show(cur+(dx<0?1:-1));sx=null})}
+  // signup: no backend yet, so be honest
+  $$('[data-signup]').forEach(function(f){var inp=f.querySelector('input[type=email]'),msg=f.querySelector('.su-msg'),saved=get('signup',null);
+    var done=function(e){f.classList.add('saved');msg.innerHTML='<b>Coming soon.</b> Nothing was sent: email updates aren\'t live yet. '+(e?'We saved <b>'+e.replace(/</g,'&lt;')+'</b> in this browser only, so you don\'t have to retype it later.':'')};
+    if(saved&&saved.email){inp.value=saved.email;done(saved.email)}
+    f.addEventListener('submit',function(ev){ev.preventDefault();var v=inp.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)){msg.textContent='Please enter a valid email address.';inp.setAttribute('aria-invalid','true');inp.focus();return}
+      inp.removeAttribute('aria-invalid');set('signup',{email:v,ts:Date.now()});done(v)})});
+  // branded loading shimmer: stop once each image has loaded
+  $$('.phero-media img, .feat-media img, .fa-img img').forEach(function(im){var f=im.closest('figure');if(!f)return;var ok=function(){f.classList.add('ld')};if(im.complete&&im.naturalWidth)ok();else{im.addEventListener('load',ok);im.addEventListener('error',ok)}});
+  // PWA: offline for checklist, map and guides
+  if('serviceWorker' in navigator&&location.protocol!=='file:'){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
 })();
